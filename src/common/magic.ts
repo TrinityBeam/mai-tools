@@ -13,15 +13,26 @@ const MagicSauce: Record<GameVersion, string> = {
   [GameVersion.FiNALE]: null,
   [GameVersion.DX]: null,
   [GameVersion.UNIVERSE_PLUS]:
-    'aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9teWppYW4vZWU1NjlkNzRmNDIyZDRlMjU1MDY1ZDhiMDJlYTI5NGEvcmF3LzkzMmZiMDNhMzgxMjEyMTAwODBkNmY1Mzc5MTNhMDg0MjQ3ZTUzMWMvbWFpZHhfaW5fbHZfdW5pdmVyc2VwbHVzLmpz',
+    'aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9teWppYW4vZWU1NjlkNzRmNDIyZDRlMjU1MDY1ZDhiMDJlYTI5NGEvcmF3Lw==',
   [GameVersion.FESTiVAL]:
-    'aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9teWppYW4vMDg1NWM4OTQ3YjU0N2Q3YjliODg4MTU4NTEyZGRlNjkvcmF3LzFlZWIwNzRkMzkzNjc3NDhhZjQwZmIxYTlkZDRhMTZiNDJmOTliNmIvbWFpZHhfaW5fbHZfZmVzdGl2YWwuanM=',
+    'aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9teWppYW4vMDg1NWM4OTQ3YjU0N2Q3YjliODg4MTU4NTEyZGRlNjkvcmF3Lw==',
   [GameVersion.FESTiVAL_PLUS]:
-    'aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9teWppYW4vYWQyNjg1ODcyZmQ3ZjVjZDdhNDdlY2IzNDA1MTRlNmIvcmF3Lzk5NjE3NDhkM2M0ODFlZjQ5NWNmZTNkMDgwMzkyYWI4NjI5NWNlOWMvbWFpZHhfaW5fbHZfZmVzdGl2YWxwbHVzLmpz',
+    'aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9teWppYW4vYWQyNjg1ODcyZmQ3ZjVjZDdhNDdlY2IzNDA1MTRlNmIvcmF3Lw==',
   [GameVersion.BUDDiES]:
-    'aHR0cHM6Ly9zZ2ltZXJhLmdpdGh1Yi5pby9tYWlfUmF0aW5nQW5hbHl6ZXIvc2NyaXB0c19tYWltYWkvbWFpZHhfaW5fbHZfYnVkZGllcy5qcw==',
+    'aHR0cHM6Ly9naXN0LmdpdGh1YnVzZXJjb250ZW50LmNvbS9teWppYW4vZThkOGJiMjcyZjMyYzJjOGE2ODU0MTQzZGUxY2FhZDEvcmF3Lw==',
   [GameVersion.BUDDiES_PLUS]:
     'aHR0cHM6Ly9zZ2ltZXJhLmdpdGh1Yi5pby9tYWlfUmF0aW5nQW5hbHl6ZXIvc2NyaXB0c19tYWltYWkvbWFpZHhfaW5fbHZfYnVkZGllc3BsdXMuanM=',
+};
+
+// If the value is true, we assume it is SongProperties[] stored as JSON.
+const MagicIsParsed: Record<GameVersion, boolean> = {
+  [GameVersion.FiNALE]: false,
+  [GameVersion.DX]: false,
+  [GameVersion.UNIVERSE_PLUS]: false,
+  [GameVersion.FESTiVAL]: false,
+  [GameVersion.FESTiVAL_PLUS]: false,
+  [GameVersion.BUDDiES]: true,
+  [GameVersion.BUDDiES_PLUS]: false,
 };
 
 const DX_REGEX = /\bdx\s*:\s*([0-9]+)/;
@@ -70,14 +81,17 @@ function parseLine(line: string): SongProperties | undefined {
 async function fetchMagic(gameVer: GameVersion): Promise<SongProperties[]> {
   const sauce = MagicSauce[gameVer] || MagicSauce[GameVersion.UNIVERSE_PLUS];
   const res = await fetch(atob(sauce));
-  if (res.ok) {
-    const text = await res.text();
-    return text
-      .split('\n')
-      .map(parseLine)
-      .filter((props) => props != null);
+  if (!res.ok) {
+    return [];
   }
-  return [];
+  if (MagicIsParsed[gameVer]) {
+    return await res.json();
+  }
+  const text = await res.text();
+  return text
+    .split('\n')
+    .map(parseLine)
+    .filter((props) => props != null);
 }
 
 function getInternalLvCacheKey(gameVer: GameVersion): string {
