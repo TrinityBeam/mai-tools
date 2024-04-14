@@ -20,7 +20,7 @@ export class LvRatingContainer extends React.PureComponent<LvRatingContainerProp
   render() {
     const {canZoomIn, lvTitle, minLv, maxLv, heightUnit, containerHeight, ranks} = this.props;
     const style = {
-      height: containerHeight + "px",
+      height: containerHeight + 'px',
     };
     return (
       <div className="lvRatingContainer" style={style}>

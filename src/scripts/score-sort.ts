@@ -10,6 +10,7 @@ import {
 } from '../common/fetch-score-util';
 import {getMyDxScoreInfo, SELF_SCORE_URLS} from '../common/fetch-self-score';
 import {getGameRegionFromOrigin} from '../common/game-region';
+import {GameVersion} from '../common/game-version';
 import {getInitialLanguage, Language} from '../common/lang';
 import {getDefaultLevel, getDisplayLv} from '../common/level-helper';
 import {fetchGameVersion, fetchPage} from '../common/net-helpers';
@@ -274,7 +275,12 @@ type Cache = {
     }
   }
 
-  function coalesceInLv(row: HTMLElement, lvIndex: number, props?: SongProperties | null) {
+  function coalesceInLv(
+    gameVer: GameVersion,
+    row: HTMLElement,
+    lvIndex: number,
+    props?: SongProperties | null
+  ) {
     let lv = 0;
     if (props) {
       lv = props.lv[lvIndex];
@@ -285,7 +291,7 @@ type Cache = {
         lv = Math.abs(lv) - LV_DELTA;
       }
     }
-    return lv || getDefaultLevel(getChartLv(row)) - LV_DELTA;
+    return lv || getDefaultLevel(gameVer, getChartLv(row)) - LV_DELTA;
   }
 
   function getChartInLv(row: HTMLElement, songDb: SongDatabase) {
@@ -308,7 +314,7 @@ type Cache = {
     } else {
       props = songDb.getSongProperties(name, '', t);
     }
-    return coalesceInLv(row, lvIndex, props);
+    return coalesceInLv(songDb.gameVer, row, lvIndex, props);
   }
 
   function compareInLv(row1: HTMLElement, row2: HTMLElement) {
@@ -749,9 +755,9 @@ type Cache = {
             cache.originalLinkIdx = idx;
             props = songDb.getSongProperties(name, '', ChartType.STANDARD);
           }
-          saveInLv(row, coalesceInLv(row, lvIndex, props));
+          saveInLv(row, coalesceInLv(gameVer, row, lvIndex, props));
         } catch (e) {
-          saveInLv(row, coalesceInLv(row, lvIndex));
+          saveInLv(row, coalesceInLv(gameVer, row, lvIndex));
         }
       } else {
         const lv = getChartInLv(row, songDb);

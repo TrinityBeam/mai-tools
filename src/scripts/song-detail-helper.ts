@@ -1,6 +1,7 @@
 import {getChartType} from '../common/chart-type';
 import {determineDxStar, getDxStarText} from '../common/dx-star';
 import {getGameRegionFromOrigin} from '../common/game-region';
+import {GameVersion} from '../common/game-version';
 import {getDefaultLevel, getDisplayLv} from '../common/level-helper';
 import {fetchGameVersion} from '../common/net-helpers';
 import {normalizeSongName} from '../common/song-name-helper';
@@ -52,7 +53,7 @@ type Cache = {
       if (!levelElement) {
         return;
       }
-      saveInLv(levelElement, coalesceInLv(levelElement, idx, props));
+      saveInLv(levelElement, coalesceInLv(gameVer, levelElement, idx, props));
     });
 
     // replace play history's level
@@ -62,7 +63,7 @@ type Cache = {
         return;
       }
       const levelElement = getLevelElement(row as HTMLElement);
-      saveInLv(levelElement, coalesceInLv(levelElement, idx, props));
+      saveInLv(levelElement, coalesceInLv(gameVer, levelElement, idx, props));
     });
   }
 
@@ -80,7 +81,12 @@ type Cache = {
     return minorLv > 0.95 ? 1 : minorLv > 0.65 && minorLv < 0.69 ? 0.7 : 0;
   }
 
-  function coalesceInLv(levelElement: HTMLElement, lvIndex: number, props?: SongProperties | null) {
+  function coalesceInLv(
+    gameVer: GameVersion,
+    levelElement: HTMLElement,
+    lvIndex: number,
+    props?: SongProperties | null
+  ) {
     let lv = 0;
     if (props) {
       lv = props.lv[lvIndex];
@@ -91,7 +97,7 @@ type Cache = {
         lv = Math.abs(lv) - LV_DELTA;
       }
     }
-    return lv || getDefaultLevel(getChartLv(levelElement)) - LV_DELTA;
+    return lv || getDefaultLevel(gameVer, getChartLv(levelElement)) - LV_DELTA;
   }
 
   function getChartLv(levelElement: HTMLElement, key: string = 'lv'): string | undefined {

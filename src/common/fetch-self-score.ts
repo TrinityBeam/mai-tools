@@ -81,7 +81,7 @@ function processRow(
     let level = props ? props.lv[difficulty] : 0;
     const levelIsPrecise = level > 0;
     if (!level) {
-      level = getDefaultLevel(getChartLevel(row));
+      level = getDefaultLevel(songDb.gameVer, getChartLevel(row));
     }
     return {
       songName,
