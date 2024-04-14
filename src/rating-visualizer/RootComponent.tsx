@@ -172,7 +172,7 @@ export class RootComponent extends React.PureComponent<{}, State> {
 
 function calculateMaxRating(maxLv: number) {
   const maxRank = getRankDefinitions()[0];
-  return Math.floor((maxRank.minAchv * maxRank.factor * maxLv) / 100);
+  return Math.floor(maxRank.minAchv * maxRank.factor * maxLv);
 }
 
 function updateDocumentTitle(lang: Language) {

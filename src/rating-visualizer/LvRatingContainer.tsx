@@ -27,7 +27,8 @@ export class LvRatingContainer extends React.PureComponent<LvRatingContainerProp
         <LvLabel title={lvTitle} onClick={this.handleLabelClick} canZoomIn={canZoomIn} />
         {heightUnit
           ? ranks.map((rank, idx) => {
-              const maxAchv = idx === 0 ? rank.minAchv : ranks[idx - 1].minAchv - 0.0001;
+              const maxAchv =
+                rank.maxAchv || (idx === 0 ? rank.minAchv : ranks[idx - 1].minAchv - 0.0001);
               return (
                 <LvRankRatingSegment
                   key={rank.title}
@@ -35,7 +36,8 @@ export class LvRatingContainer extends React.PureComponent<LvRatingContainerProp
                   maxLv={maxLv}
                   minAchv={rank.minAchv}
                   maxAchv={maxAchv}
-                  rankFactor={rank.factor}
+                  minFactor={rank.factor}
+                  maxFactor={rank.maxFactor || rank.factor}
                   heightUnit={heightUnit}
                   title={rank.title}
                   highlightInterval={this.props.highlightInterval}

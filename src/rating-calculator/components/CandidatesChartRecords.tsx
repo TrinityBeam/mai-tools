@@ -218,7 +218,7 @@ export const CandidateChartRecords = ({
 };
 
 function generateLevels(minRating: number): LevelDef[] {
-  const easiestLv = (minRating * 100) / (RANK_SSS_PLUS.factor * RANK_SSS_PLUS.minAchv);
+  const easiestLv = minRating / (RANK_SSS_PLUS.factor * RANK_SSS_PLUS.minAchv);
   let baseLv = Math.floor(easiestLv);
   const isPlus = easiestLv - baseLv > 0.6;
   const levels: LevelDef[] = [];

@@ -103,11 +103,11 @@ export function getNotPlayedCharts(
   const hardestLv = requiredLv
     ? requiredLv.maxLv
     : maxRating
-    ? (maxRating * 100) / (RANK_S.factor * RANK_S.minAchv)
+    ? maxRating / (RANK_S.factor * RANK_S.minAchv)
     : 15;
   const easiestLv = requiredLv
     ? requiredLv.minLv
-    : (minRating * 100) / (RANK_SSS_PLUS.factor * RANK_SSS_PLUS.minAchv);
+    : minRating / (RANK_SSS_PLUS.factor * RANK_SSS_PLUS.minAchv);
   const candidates: ChartRecordWithRating[] = [];
   const shuffledSongList = shuffleArray(songList);
   for (const s of shuffledSongList) {

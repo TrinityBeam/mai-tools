@@ -5,10 +5,12 @@ import {SongProperties} from './song-props';
 export function calculateRatingRange(lv: number, rank: RankDef) {
   const rankDefs = getRankDefinitions();
   const idx = rankDefs.indexOf(rank);
+  const minRating = Math.floor(lv * rank.minAchv * rank.factor);
+  if (rank.maxAchv && rank.maxFactor) {
+    return [minRating, Math.floor(lv * rank.maxAchv * rank.maxFactor)];
+  }
   const maxAchv = idx >= 1 ? rankDefs[idx - 1].minAchv - 0.0001 : rank.minAchv;
-  const minRating = Math.floor((lv * rank.minAchv * rank.factor) / 100);
-  const maxRating = Math.floor((lv * maxAchv * rank.factor) / 100);
-  return [minRating, maxRating];
+  return [minRating, Math.floor(lv * maxAchv * rank.factor)];
 }
 
 export function calculateFullRating(songs: ReadonlyArray<SongProperties>, count: number) {
@@ -20,10 +22,9 @@ export function calculateFullRating(songs: ReadonlyArray<SongProperties>, count:
   }
   allLvs.sort(compareNumber);
   const topLvs = allLvs.slice(Math.max(0, allLvs.length - count));
-  const topRank = RANK_SSS_PLUS;
   let totalRating = 0;
   for (const lv of topLvs) {
-    totalRating += Math.floor((lv * topRank.minAchv * topRank.factor) / 100);
+    totalRating += Math.floor(lv * RANK_SSS_PLUS.minAchv * RANK_SSS_PLUS.factor);
   }
   return totalRating;
 }
@@ -37,6 +38,10 @@ export function getRating(level: number, achv: number) {
   const rank = getRankByAchievement(achievement);
   if (!rank) {
     console.warn(`Could not find rank for achievement ${achievement.toFixed(4)}%`);
+    return 0;
   }
-  return rank ? (level * rank.factor * achievement) / 100 : 0;
+  if (rank.maxAchv && rank.maxFactor && rank.maxAchv == achv) {
+    return level * rank.maxAchv * rank.maxFactor;
+  }
+  return level * achievement * rank.factor;
 }
