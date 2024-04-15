@@ -18,8 +18,8 @@ export class LvRankRatingSegment extends React.PureComponent<LvRankRatingSegment
 
   render() {
     const {minLv, minAchv, minFactor, maxLv, maxAchv, maxFactor, heightUnit, title} = this.props;
-    this.minRt = Math.floor((minLv * minAchv * minFactor) / 100);
-    this.maxRt = Math.floor((maxLv * maxAchv * maxFactor) / 100);
+    this.minRt = Math.floor(minLv * minAchv * minFactor);
+    this.maxRt = Math.floor(maxLv * maxAchv * maxFactor);
     const style = {
       bottom: (this.minRt - 0.5) * heightUnit + 'px',
       height: (this.maxRt - this.minRt + 1) * heightUnit + 'px',
