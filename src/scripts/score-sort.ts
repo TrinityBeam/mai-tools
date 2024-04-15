@@ -62,8 +62,8 @@ type Cache = {
       [SortBy.RankDes]: 'Rank (high \u2192 low)',
       [SortBy.ApFcAsc]: 'AP/FC (FC \u2192 AP+)',
       [SortBy.ApFcDes]: 'AP/FC (AP+ \u2192 FC)',
-      [SortBy.SyncAsc]: 'Sync (FS \u2192 FSD+)',
-      [SortBy.SyncDes]: 'Sync (FSD+ \u2192 FS)',
+      [SortBy.SyncAsc]: 'Sync (SYNC PLAY \u2192 FSD+)',
+      [SortBy.SyncDes]: 'Sync (FSD+ \u2192 SYNC PLAY)',
       [SortBy.VsResultAsc]: 'VS Result (Lose \u2192 Win)',
       [SortBy.VsResultDes]: 'VS Result (Win \u2192 Lose)',
       [SortBy.LvAsc]: 'Level (low \u2192 high)',
@@ -79,8 +79,8 @@ type Cache = {
       [SortBy.RankDes]: '達成率 (由高至低)',
       [SortBy.ApFcAsc]: 'AP/FC (由 FC 到 AP+)',
       [SortBy.ApFcDes]: 'AP/FC (由 AP+ 到 FC)',
-      [SortBy.SyncAsc]: 'Sync (由 FS 到 FSD+)',
-      [SortBy.SyncDes]: 'Sync (由 FSD+ 到 FS)',
+      [SortBy.SyncAsc]: 'Sync (由 SYNC PLAY 到 FSD+)',
+      [SortBy.SyncDes]: 'Sync (由 FSD+ 到 SYNC PLAY)',
       [SortBy.VsResultAsc]: '對戰結果 (由敗北到勝利)',
       [SortBy.VsResultDes]: '對戰結果 (由勝利到敗北)',
       [SortBy.LvAsc]: '譜面等級 (由低至高)',
@@ -96,8 +96,8 @@ type Cache = {
       [SortBy.RankDes]: '정확도 내림차순 (높음 \u2192 낮음)',
       [SortBy.ApFcAsc]: 'AP/FC 오름차순 (FC \u2192 AP+)',
       [SortBy.ApFcDes]: 'AP/FC 내림차순 (AP+ \u2192 FC)',
-      [SortBy.SyncAsc]: 'Sync 오름차순 (FS \u2192 FSD+)',
-      [SortBy.SyncDes]: 'Sync 내림차순 (FSD+ \u2192 FS)',
+      [SortBy.SyncAsc]: 'Sync 오름차순 (SYNC PLAY \u2192 FSD+)',
+      [SortBy.SyncDes]: 'Sync 내림차순 (FSD+ \u2192 SYNC PLAY)',
       [SortBy.VsResultAsc]: 'VS 결과 오름차순 (Lose \u2192 Win)',
       [SortBy.VsResultDes]: 'VS 결과 내림차순 (Win \u2192 Lose)',
       [SortBy.LvAsc]: '난이도 오름차순 (낮음 \u2192 높음)',
@@ -574,11 +574,11 @@ type Cache = {
         apfcCount[x] = 0;
       }
       rows.forEach((row) => {
-        apfcCount[getApFcStatus(row)]++;
+        apfcCount[getApFcStatus(row, true)]++;
       });
 
       // 4 is the index of null
-      for (let i = 1; i < 4; i++) {
+      for (let i = 1; i < AP_FC_TYPES.length - 1; i++) {
         apfcCount[AP_FC_TYPES[i]] += apfcCount[AP_FC_TYPES[i - 1]];
       }
 
@@ -595,19 +595,20 @@ type Cache = {
         syncCount[x] = 0;
       }
       rows.forEach((row) => {
-        syncCount[getSyncStatus(row)]++;
+        syncCount[getSyncStatus(row, true)]++;
       });
 
       // 4 is the index of null
-      for (let i = 1; i < 4; i++) {
+      for (let i = 1; i < SYNC_TYPES.length - 1; i++) {
         syncCount[SYNC_TYPES[i]] += syncCount[SYNC_TYPES[i - 1]];
       }
 
-      const columns = summaryTable.querySelectorAll('tr:nth-child(2) .f_10');
-      columns[4].innerHTML = `${syncCount['FS']}/${total}`;
-      columns[5].innerHTML = `${syncCount['FS+']}/${total}`;
-      columns[6].innerHTML = `${syncCount['FSD']}/${total}`;
-      columns[7].innerHTML = `${syncCount['FSD+']}/${total}`;
+      const columns = summaryTable.querySelectorAll('tr:nth-child(3) .f_10');
+      columns[0].innerHTML = `${syncCount['SYNC']}/${total}`;
+      columns[1].innerHTML = `${syncCount['FS']}/${total}`;
+      columns[2].innerHTML = `${syncCount['FS+']}/${total}`;
+      columns[3].innerHTML = `${syncCount['FSD']}/${total}`;
+      columns[4].innerHTML = `${syncCount['FSD+']}/${total}`;
     }
 
     function updateDxStarSummary() {
