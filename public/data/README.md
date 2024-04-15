@@ -6,7 +6,7 @@ Each JSON file in this folder represents data specific to the version.
 
 - Chart type: Either "dx" or "standard"
   - Song name
-    - Levels: An array of chart levels (BASIC, ADVANCED, EXPERT, MASTER, and Re:MASTER). If you don't know the exact level, please use negative number. For example, if you know a chart is 12.9, use 12.9. If you only know a chart is 12+, use -12.7. If you only know a chart is 12, use -12.
+    - Levels: An array of chart levels (BASIC, ADVANCED, EXPERT, MASTER, and Re:MASTER). If you don't know the exact level, please use negative number. For example, if you know a chart is 12.9, use 12.9. If you only know a chart is 12+, use -12.6 (BUDDiES PLUS or newer) or -12.7 (older versions). If you only know a chart is 12, use -12.
 
 ## song-info Schema
 

@@ -12,7 +12,12 @@ import {getMyDxScoreInfo, SELF_SCORE_URLS} from '../common/fetch-self-score';
 import {getGameRegionFromOrigin} from '../common/game-region';
 import {GameVersion} from '../common/game-version';
 import {getInitialLanguage, Language} from '../common/lang';
-import {getDefaultLevel, getDisplayLv} from '../common/level-helper';
+import {
+  compareLevels,
+  getDisplayLv,
+  getMinConstant,
+  getOfficialLevel,
+} from '../common/level-helper';
 import {fetchGameVersion, fetchPage} from '../common/net-helpers';
 import {getSongIdx, isNiconicoLink} from '../common/song-name-helper';
 import {loadSongDatabase, SongDatabase, SongProperties} from '../common/song-props';
@@ -146,7 +151,7 @@ type Cache = {
     null,
   ];
   const AP_FC_TYPES = ['AP+', 'AP', 'FC+', 'FC', null];
-  const SYNC_TYPES = ['FSD+', 'FSD', 'FS+', 'FS', null];
+  const SYNC_TYPES = ['FSD+', 'FSD', 'FS+', 'FS', 'SYNC', null];
   const VS_RESULTS = ['WIN', 'DRAW', 'LOSE'];
   const DX_STARS = [
     null,
@@ -158,7 +163,6 @@ type Cache = {
     '✦6 - 99%',
     '✦7 - 100%',
   ];
-  const LV_DELTA = 0.02;
   const isFriendScore = location.pathname.includes('battleStart');
   const isDxScoreVs = location.search.includes('scoreType=1');
   const isUtage = location.search.includes('diff=10');
@@ -173,23 +177,12 @@ type Cache = {
     );
   }
 
-  /**
-   * @returns if lv is estimate, 1 or 0.7. if lv is accurate, 0.
-   */
-  function isEstimateLv(lv: number) {
-    const majorLv = Math.floor(lv);
-    const minorLv = lv - majorLv;
-    return minorLv > 0.95 ? 1 : minorLv > 0.65 && minorLv < 0.69 ? 0.7 : 0;
-  }
-
-  function getInLvSecTitle(lv: number) {
-    const isEstimate = isEstimateLv(lv);
-    if (!isEstimate) {
+  function getInLvSecTitle(gameVer: GameVersion, lv: number) {
+    const isPrecise = lv > 0;
+    if (isPrecise) {
       return 'INTERNAL LEVEL ' + lv.toFixed(1);
-    } else if (isEstimate < 1) {
-      return 'UNKNOWN LEVEL ' + Math.floor(lv) + '+';
     }
-    return 'UNKNOWN LEVEL ' + lv.toFixed(0);
+    return 'UNKNOWN LEVEL ' + getOfficialLevel(gameVer, Math.abs(lv));
   }
 
   function createMap(sections: (string | null)[], reverse: boolean) {
@@ -212,7 +205,7 @@ type Cache = {
     size: number,
     totalSize: number
   ) {
-    let title = style === SectionHeadStyle.DxStar ? '' : '\u25D6';
+    let title = style === SectionHeadStyle.DxStar ? '' : '《';
     switch (style) {
       case SectionHeadStyle.Level:
         title += 'LEVEL ' + section;
@@ -225,7 +218,7 @@ type Cache = {
         break;
     }
     if (style !== SectionHeadStyle.DxStar) {
-      title += '\u25D7';
+      title += '》';
     }
     return title + '\u3000\u3000\u3000' + size + '/' + totalSize;
   }
@@ -264,9 +257,8 @@ type Cache = {
   function saveInLv(row: HTMLElement, lv: number) {
     const elem = getChartLvElem(row);
     if (!elem.dataset['inlv']) {
-      const isEstimate = isEstimateLv(lv);
-      elem.dataset['inlv'] = lv.toFixed(2);
-      const t = getDisplayLv(lv, isEstimate !== 0);
+      elem.dataset['inlv'] = lv.toFixed(1);
+      const t = getDisplayLv(lv);
       if (t.length > 4) {
         elem.classList.remove('f_14');
         elem.classList.add('f_13');
@@ -281,17 +273,8 @@ type Cache = {
     lvIndex: number,
     props?: SongProperties | null
   ) {
-    let lv = 0;
-    if (props) {
-      lv = props.lv[lvIndex];
-      if (typeof lv !== 'number') {
-        lv = 0;
-      } else if (lv < 0) {
-        // console.warn("lv is negative for song " + song, props);
-        lv = Math.abs(lv) - LV_DELTA;
-      }
-    }
-    return lv || getDefaultLevel(gameVer, getChartLv(row)) - LV_DELTA;
+    const lv = props ? props.lv[lvIndex] : 0;
+    return lv || -getMinConstant(gameVer, getChartLv(row));
   }
 
   function getChartInLv(row: HTMLElement, songDb: SongDatabase) {
@@ -320,7 +303,7 @@ type Cache = {
   function compareInLv(row1: HTMLElement, row2: HTMLElement) {
     const lv1 = getChartInLv(row1, cache.songDb!);
     const lv2 = getChartInLv(row2, cache.songDb!);
-    return lv1 < lv2 ? -1 : lv2 < lv1 ? 1 : 0;
+    return compareLevels(lv1, lv2);
   }
 
   function sortRowsByLevel(rows: NodeListOf<HTMLElement>, reverse: boolean) {
@@ -445,7 +428,8 @@ type Cache = {
     if (row.dataset.dxStar) {
       return row.dataset.dxStar === 'null' ? null : row.dataset.dxStar;
     }
-    const dxStar = DX_STARS[getMyDxScoreInfo(row).star];
+    const dxScoreInfo = getMyDxScoreInfo(row);
+    const dxStar = dxScoreInfo ? DX_STARS[dxScoreInfo.star] : null;
     row.dataset.dxStar = dxStar;
     return dxStar;
   }
@@ -459,26 +443,24 @@ type Cache = {
     return createRowsWithSection(map, SectionHeadStyle.DxStar, rows.length);
   }
 
-  function sortRowsByInLv(rows: NodeListOf<HTMLElement>, reverse: boolean) {
-    const inLvSet = new Map<number, boolean>();
+  function sortRowsByInLv(gameVer: GameVersion, rows: NodeListOf<HTMLElement>, reverse: boolean) {
+    const inLvSet = new Set<number>();
     const inLvs: number[] = [];
     for (const row of Array.from(rows)) {
       const lv = getChartInLv(row, cache.songDb!);
-      inLvSet.set(lv, true);
+      inLvSet.add(lv);
       inLvs.push(lv);
     }
-    const sortedInLv = Array.from(inLvSet.keys()).sort((lv1, lv2) => {
-      return lv1 > lv2 ? -1 : lv1 < lv2 ? 1 : 0;
-    });
+    const sortedInLv = Array.from(inLvSet.keys()).sort(compareLevels);
     if (reverse) {
       sortedInLv.reverse();
     }
     const map = new Map<string, HTMLElement[]>();
     sortedInLv.forEach((lv) => {
-      map.set(getInLvSecTitle(lv), []);
+      map.set(getInLvSecTitle(gameVer, lv), []);
     });
     Array.from(rows).forEach((row, index) => {
-      map.get(getInLvSecTitle(inLvs[index])).push(row);
+      map.get(getInLvSecTitle(gameVer, inLvs[index])).push(row);
     });
     return createRowsWithSection(map, SectionHeadStyle.Default, rows.length);
   }
@@ -525,10 +507,10 @@ type Cache = {
         sortedRows = sortRowsByLevel(rows, false);
         break;
       case SortBy.InLvDes:
-        sortedRows = sortRowsByInLv(rows, false);
+        sortedRows = sortRowsByInLv(cache.songDb!!.gameVer, rows, true);
         break;
       case SortBy.InLvAsc:
-        sortedRows = sortRowsByInLv(rows, true);
+        sortedRows = sortRowsByInLv(cache.songDb!!.gameVer, rows, false);
         break;
       case SortBy.DxStarAsc:
         sortedRows = sortRowsByDxStar(rows, false);

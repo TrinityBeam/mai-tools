@@ -4,7 +4,7 @@ import {LangSwitcher} from '../common/components/LangSwitcher';
 import {GameVersion} from '../common/game-version';
 import {getInitialLanguage, Language} from '../common/lang';
 import {LangContext} from '../common/lang-react';
-import {getDefaultLevel, getMaxConstant, getOfficialLevel, LevelDef} from '../common/level-helper';
+import {getMaxConstant, getMinConstant, getOfficialLevel, LevelDef} from '../common/level-helper';
 import {getRankDefinitions} from '../common/rank-functions';
 import {loadUserPreference, saveUserPreference, UserPreference} from '../common/user-preference';
 import {MultiplierTable} from './MultiplierTable';
@@ -120,7 +120,7 @@ export class RootComponent extends React.PureComponent<{}, State> {
   private getLevels(): LevelDef[] {
     const {minLv, maxLv} = this.state;
     // TODO: Take input from option or query params
-    const startLv = getDefaultLevel(GameVersion.BUDDiES, minLv);
+    const startLv = getMinConstant(GameVersion.BUDDiES, minLv);
     const endLv = getMaxConstant(GameVersion.BUDDiES, maxLv);
     const lvs = [];
     let currentLv = startLv;
