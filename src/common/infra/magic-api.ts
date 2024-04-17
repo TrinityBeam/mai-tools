@@ -1,8 +1,8 @@
+import {addToCache, cached, expireCache} from '../cache';
 import {DIFFICULTIES} from '../difficulties';
 import {GameVersion} from '../game-version';
 import {normalizeSongName} from '../song-name-helper';
 import {SongProperties} from '../song-props';
-import {cached, expireCache} from '../util';
 
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
 const CACHE_KEY_PREFIX = 'magicVer';
@@ -90,7 +90,9 @@ export class MagicApi {
     const sauce = MagicSauce[gameVer] || MagicSauce[GameVersion.UNIVERSE_PLUS];
     const res = await fetch(atob(sauce));
     if (!res.ok) {
-      return [];
+      const error = new Error(`Failed to load magic ${gameVer}`);
+      console.warn(error.message);
+      return Promise.reject(error);
     }
     if (MagicIsParsed[gameVer]) {
       return await res.json();
@@ -103,9 +105,20 @@ export class MagicApi {
   }
 
   async loadMagic(gameVer: GameVersion): Promise<SongProperties[]> {
-    // console.log('Magic happening...');
-    const songs = await cached(CACHE_KEY_PREFIX + gameVer, CACHE_DURATION, () =>
-      this.fetchMagic(gameVer)
+    const songs = await cached<SongProperties[]>(
+      CACHE_KEY_PREFIX + gameVer,
+      CACHE_DURATION,
+      async (expiredValue) => {
+        try {
+          const newValue = await this.fetchMagic(gameVer);
+          addToCache(CACHE_KEY_PREFIX + gameVer, newValue, CACHE_DURATION);
+          return newValue;
+        } catch (err) {
+          console.warn(`Use expired cached magic ${gameVer}`);
+          return expiredValue;
+        }
+      },
+      () => this.fetchMagic(gameVer).catch(() => [])
     );
     if (!songs.length) {
       expireCache(CACHE_KEY_PREFIX + gameVer);
