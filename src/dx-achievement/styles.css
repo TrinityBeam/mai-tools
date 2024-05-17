@@ -106,13 +106,3 @@ button:nth-child(2) {
 .missJudgement {
   color: #868686;
 }
-
-.copyLink {
-  position: absolute;
-  bottom: 1px;
-  right: 1px;
-  background-color: rgba(0, 0, 0, 0);
-  border-style: none;
-  margin: 2px 0;
-  font-size: 12px;
-}

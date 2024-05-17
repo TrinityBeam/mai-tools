@@ -1,6 +1,6 @@
 import React from 'react';
-import {QueryParam} from '../common/query-params';
 
+import {QueryParam} from '../common/query-params';
 import {DxAchvDetails} from './DxAchvDetails';
 import {calculateDxAchvFromFinaleResult} from './finaleBacktracing';
 
@@ -19,7 +19,8 @@ export class DxAchievementCalculator extends React.PureComponent<{}, State> {
   constructor(props: {}) {
     super(props);
     const queryParams = new URLSearchParams(location.search);
-    const rawAchvArg = queryParams.get(QueryParam.Achievement) || queryParams.get(QueryParam.AchievementOld);
+    const rawAchvArg =
+      queryParams.get(QueryParam.Achievement) || queryParams.get(QueryParam.AchievementOld);
     const rawTotalScoreArg = queryParams.get(QueryParam.TotalScore);
     const rawBreakScoreArg = queryParams.get(QueryParam.BreakScore);
     const rawBreakJudgementsArg = queryParams.get(QueryParam.BreakJudgement);
@@ -27,7 +28,7 @@ export class DxAchievementCalculator extends React.PureComponent<{}, State> {
       const achvArg = parseFloat(rawAchvArg);
       const totalScoreArg = parseInt(rawTotalScoreArg);
       const breakScoreArg = parseInt(rawBreakScoreArg);
-      const breakJudgementTexts = rawBreakJudgementsArg.split("-");
+      const breakJudgementTexts = rawBreakJudgementsArg.split('-');
       const breakJudgementNums = breakJudgementTexts.map((j) => parseInt(j, 10));
       if (
         achvArg > 0 &&
@@ -49,13 +50,13 @@ export class DxAchievementCalculator extends React.PureComponent<{}, State> {
       }
     }
     this.state = {
-      initialFinaleAchvInput: "",
+      initialFinaleAchvInput: '',
       finaleAchv: 0,
-      initialTotalScoreInput: "",
+      initialTotalScoreInput: '',
       totalScore: 0,
-      initialBreakScoreInput: "",
+      initialBreakScoreInput: '',
       breakScore: 0,
-      initialBreakJudgementsInput: ["", "", "", ""],
+      initialBreakJudgementsInput: ['', '', '', ''],
       breakJudgements: [0, 0, 0, 0],
     };
   }
@@ -158,23 +159,21 @@ export class DxAchievementCalculator extends React.PureComponent<{}, State> {
             </div>
           </div>
         </form>
-        {distByAchv.size ? (
-          <div className="resultHeading">
-            <h3>{this.getDxAchvRange(distByAchv)}</h3>
-            <a href={this.getUrlForCurrentInput()}>Link to this result</a>
-          </div>
-        ) : null}
+        <div className="resultHeading">
+          <h3>{this.getDxAchvRange(distByAchv)}</h3>
+          <a href={this.getUrlForCurrentInput()}>Link to this result</a>
+        </div>
         {Array.from(distByAchv.entries()).map(([dxAchv, dist], index) => (
           <DxAchvDetails key={index} dxAchv={dxAchv} breakDist={dist} />
         ))}
-        <button className="copyLink" type="button" onClick={this.handleCopyLink}>
-          📎
-        </button>
       </>
     );
   }
 
   private getDxAchvRange(distsByAchv: Map<string, unknown>) {
+    if (!distsByAchv.size) {
+      return `DX Achievement: ?`;
+    }
     let first, last: string;
     for (const key of distsByAchv.keys()) {
       if (!first) {
@@ -191,12 +190,12 @@ export class DxAchievementCalculator extends React.PureComponent<{}, State> {
   private getUrlForCurrentInput() {
     const {finaleAchv, totalScore, breakScore, breakJudgements} = this.state;
     return (
-      "?" +
+      '?' +
       new URLSearchParams({
         [QueryParam.Achievement]: finaleAchv.toFixed(2),
         [QueryParam.BreakScore]: breakScore.toString(),
         [QueryParam.TotalScore]: totalScore.toString(),
-        [QueryParam.BreakJudgement]: breakJudgements.join("-"),
+        [QueryParam.BreakJudgement]: breakJudgements.join('-'),
       })
     );
   }
@@ -211,8 +210,8 @@ export class DxAchievementCalculator extends React.PureComponent<{}, State> {
   private handleChangeTotalScore = (evt: React.FormEvent<HTMLInputElement>) => {
     const totalScore = parseInt(evt.currentTarget.value);
     if (totalScore > 0) {
-      const name = evt.currentTarget.name as "breakScore" | "totalScore";
-      const newState = {[name]: totalScore} as Pick<State, "breakScore" | "totalScore">;
+      const name = evt.currentTarget.name as 'breakScore' | 'totalScore';
+      const newState = {[name]: totalScore} as Pick<State, 'breakScore' | 'totalScore'>;
       this.setState(newState);
     }
   };
@@ -227,23 +226,19 @@ export class DxAchievementCalculator extends React.PureComponent<{}, State> {
     }
   };
 
-  private handleCopyLink = () => {
-    window.location.assign(this.getUrlForCurrentInput());
-  };
-
   private handleFillExample = (evt: React.FormEvent) => {
     evt.preventDefault();
     if (Math.random() > 0.5) {
       // 全人類ノ非想天則 EXPERT
-      location.assign("?achv=100.46&bs=170850&ts=385300&bj=65-2-0-0");
+      location.assign('?achv=100.46&bs=170850&ts=385300&bj=65-2-0-0');
     } else {
       // Shake it! MASTER
-      location.assign("?achv=99.96&bs=64050&ts=380850&bj=24-1-0-0");
+      location.assign('?achv=99.96&bs=64050&ts=380850&bj=24-1-0-0');
     }
   };
 
   private handleReset = (evt: React.FormEvent) => {
     evt.preventDefault();
-    location.assign("?");
+    location.assign('?');
   };
 }
