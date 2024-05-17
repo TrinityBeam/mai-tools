@@ -24,7 +24,7 @@ function getSongNameCell(
   return (
     <a
       className="songWikiLink"
-      href={getArcadeSongLink(record.songName, record.chartType)}
+      href={getArcadeSongLink(record.songName, record.chartType, record.difficulty)}
       target="_blank"
     >
       {displayName}
